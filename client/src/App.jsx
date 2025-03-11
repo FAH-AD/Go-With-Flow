@@ -15,15 +15,16 @@ import { updateUser } from './redux/AuthSlice'
 import Client from './pages/Client'
 import Freelancer from './pages/Freelancer'
 import Home from './pages/Home'
+import Chat from './pages/Chat'
 
 
 export default function App() {
   const user=useSelector((state)=>state.Auth.user)
 const disptch=useDispatch()
-  useEffect(()=>{
+  // useEffect(()=>{
          
-        disptch(updateUser())
-  },[user])
+  //       disptch(updateUser())
+  // },[user])
 
   return (
     <>
@@ -43,6 +44,7 @@ const disptch=useDispatch()
               <Route path='client' element={<Client/>}/>
               <Route path='freelancer' element={<Freelancer/>}/>
               <Route path='register' element={<Register/>}/>
+              <Route path='chat' element={<Chat/>}/>
                    
               </Route>
             </Routes>

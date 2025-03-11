@@ -1,6 +1,9 @@
 import express from 'express';
 import { CheckUser, login, logout, register } from '../controllers/Auth.js';
 import { isAdmin,isClient,isFreelancer, authMiddleware } from '../middleware/authMiddleware.js';
+import jwt from 'jsonwebtoken'; // ✅ Import jsonwebtoken
+import UserModel from '../models/user.js';
+
 
 const AuthRoutes = express.Router();
 

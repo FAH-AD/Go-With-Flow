@@ -18,7 +18,7 @@ router.get('/:id', getJobById);
 router.post('/:id/apply',  isFreelancer, applyForJob);
 
 // ✅ Get All Applications for a Job (Client/Admin Only)
-router.get('/:id/applications', isFreelancer, getJobApplications);
+router.get('/:id/applications', getJobApplications);
 
 // ✅ Delete a Job (Client/Admin Only)
 router.delete('/:id', isAdmin, deleteJob);

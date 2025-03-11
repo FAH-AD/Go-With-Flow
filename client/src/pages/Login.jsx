@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { post } from '../services/ApiEndpoint';
 import { toast } from 'react-hot-toast';
@@ -17,35 +18,36 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!email || !password) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
-
+  
     try {
-      const request = await post('/api/login', { email, password });
-      const response = request.data;
-
-      if (request.status === 200) {
-        localStorage.setItem("authToken", response.token);
-        dispatch(SetUser(response.user));
-        toast.success(response.message);
-
-        if (response.user.role === 'admin') {
-          navigate('/admin');
-        } else if (response.user.role === 'client') {
-          navigate('/client');
-        } else if (response.user.role === 'freelancer') {
-          navigate('/freelancer');
+      const response = await axios.post("/api/login", { email, password });
+  
+      if (response.status === 200) {
+        const { token, user, message } = response.data;
+  
+        localStorage.setItem("authToken", token);
+        dispatch(SetUser(user));
+        console.log(user,"user on login")
+        toast.success(message);
+  
+        if (user.role === "admin") {
+          navigate("/admin");
+        } else if (user.role === "client") {
+          navigate("/client");
+        } else if (user.role === "freelancer") {
+          navigate("/freelancer");
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error('Login failed. Invalid Credentials.');
+      toast.error("Login failed. Invalid Credentials.");
     }
   };
-
   return (
     <>
       <Navbar showFullNav={false} />
