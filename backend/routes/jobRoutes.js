@@ -23,4 +23,6 @@ router.get('/:id/applications', getJobApplications);
 // ✅ Delete a Job (Client/Admin Only)
 router.delete('/:id', isAdmin, deleteJob);
 
+
+
 export default router;

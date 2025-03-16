@@ -11,7 +11,7 @@ import jobRoutes from "./routes/jobRoutes.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
-import { initializeSocket } from "./controllers/socet.js"; //  Correct socket import
+import { initializeSocket } from "./controllers/socket.js"; //  Correct socket import
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;

@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 
-const socket = io("http://localhost:5000"); // Adjust for production
+const socket = io("http://localhost:5000"); // Backend Socket.io Server
 
 const Chat = () => {
   const user = useSelector((state) => state.Auth.user);
@@ -20,88 +20,64 @@ const Chat = () => {
       return;
     }
 
-
     const fetchJobs = async () => {
       try {
-          const token = localStorage.getItem("authToken");
-  
-          // if (!token) {
-          //     console.error("❌ No auth token found!");
-          //     toast.error("Authentication required. Please log in.");
-          //     return;
-          // }
-  
-          console.log("Token:", token); // Debug token value
-  
-          const response = await axios.get(
-              "http://localhost:5000/api/jobs/67b9d60d4cfe32251730de21/applications"
-              
-          );
-  
-          console.log("Response Data:", response.data);
-  
-          if (response.data.success && response.data.applications.length > 0) {
-              setJobId(response.data.applications[0].jobId);
-              setFreelancerId(response.data.applications[0].freelancerId._id);
-          } else {
-              toast.error("No jobs available.");
-          }
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get(
+          "http://localhost:5000/api/jobs/67b9d60d4cfe32251730de21/applications",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success && response.data.applications.length > 0) {
+          setJobId(response.data.applications[0].jobId);
+          setFreelancerId(response.data.applications[0].freelancerId._id);
+        } else {
+          toast.error("No jobs available.");
+        }
       } catch (error) {
-          console.error("Error fetching jobs:", error);
-          if (error.response?.status === 401) {
-              toast.error("Session expired. Please log in again.");
-              localStorage.removeItem("authToken"); // Clear invalid token
-          } else {
-              toast.error("Failed to load jobs.");
-          }
+        console.error("Error fetching jobs:", error);
+        toast.error("Failed to load jobs.");
       }
-  };
-  
-  
-    
-    
+    };
+
     fetchJobs();
   }, [user]);
 
   useEffect(() => {
-    console.log(jobId, freelancerId);
     if (!jobId || !freelancerId) return;
 
     const fetchChatDetails = async () => {
-        try {
-            const res = await axios.post(`/api/messages/start`, {
-                jobId: jobId,
-                clientId: user.role === "client" ? user._id : null,
-                freelancerId: freelancerId,
-            });
+      try {
+        const res = await axios.post("/api/messages/start", {
+          jobId: jobId,
+          clientId: user.role === "client" ? user._id : null,
+          freelancerId: freelancerId,
+        });
 
-            setChatId(res.data._id);
-            setMessages(res.data.messages || []);
+        setChatId(res.data._id);
+        setMessages(res.data.messages || []);
 
-            // ✅ Ensure the user joins the correct room
-            socket.emit("joinRoom", { jobId });
-
-        } catch (error) {
-            console.error("Error fetching chat:", error);
-            toast.error("Error loading chat.");
-        }
+        // Join chat room for real-time updates
+        socket.emit("joinRoom", { jobId });
+      } catch (error) {
+        console.error("Error fetching chat:", error);
+        toast.error("Error loading chat.");
+      }
     };
 
     fetchChatDetails();
 
-    // ✅ Make sure to listen for messages and update state
+    // Listen for new messages
     const messageListener = (newMessage) => {
-        console.log("Received new message:", newMessage);
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     };
 
     socket.on("receiveMessage", messageListener);
 
     return () => {
-        socket.off("receiveMessage", messageListener); // Cleanup listener
+      socket.off("receiveMessage", messageListener); // Cleanup listener
     };
-}, [jobId, freelancerId, user]);
-
+  }, [jobId, freelancerId, user]);
 
   const sendMessage = async () => {
     if (!message.trim()) {
@@ -110,18 +86,23 @@ const Chat = () => {
     }
 
     const chatData = {
-      jobId : jobId,
+      jobId: jobId,
+      clientId: user.role === "client" ? user._id : null,
+      freelancerId: user.role === "freelancer" ? user._id : freelancerId,
       senderId: user?._id,
       text: message,
+      clientName: user.name,
     };
 
+    // Emit message to Socket.IO
     socket.emit("sendMessage", chatData);
 
+    // Optimistically update UI before saving to DB
     setMessages((prev) => [...prev, { ...chatData, timestamp: new Date().toISOString() }]);
     setMessage("");
 
     try {
-      await axios.post(`/api/messages/message`, chatData);
+      await axios.post("/api/messages/message", chatData);
     } catch (err) {
       console.error("Error saving message:", err);
       toast.error("Failed to send message.");
@@ -131,13 +112,20 @@ const Chat = () => {
   return (
     <div className="max-w-3xl mx-auto p-4 bg-gray-900 text-white rounded-lg">
       <h2 className="text-xl font-bold mb-3">Chat about this Job</h2>
-      
+
       {jobId ? (
         <>
           <div className="h-64 overflow-y-auto bg-gray-800 p-3 rounded-md">
             {messages.map((msg, index) => (
-              <div key={index} className={`mb-2 ${msg.senderId === user?._id ? "text-right" : "text-left"}`}>
-                <p className={`inline-block p-2 rounded-md ${msg.senderId === user?._id ? "bg-purple-600" : "bg-gray-700"}`}>
+              <div
+                key={index}
+                className={`mb-2 ${msg.senderId === user?._id ? "text-right" : "text-left"}`}
+              >
+                <p
+                  className={`inline-block p-2 rounded-md ${
+                    msg.senderId === user?._id ? "bg-purple-600" : "bg-gray-700"
+                  }`}
+                >
                   {msg.text}
                 </p>
               </div>
