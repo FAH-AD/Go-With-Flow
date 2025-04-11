@@ -73,28 +73,70 @@ const deleteJob = async (req, res) => {
 };
 const fetchJobs = async (req, res) => {
     try {
-        const { search } = req.query;
+        const {
+            search,
+            salaryMin,
+            salaryMax,
+            jobType,
+            level // Entry, Medium, Expert
+        } = req.query;
 
-        // Create a query object to hold search criteria
+        // Base query
         let query = {};
 
+        // Text search
         if (search) {
-            query = {
-                $or: [
-                    { title: { $regex: search, $options: 'i' } },
-                    { tags: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ]
-            };
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { tags: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
         }
 
-        // Fetch jobs based on the query
-        const jobs = await JobModel.find(query).sort({ createdAt: -1 });
-        
-        res.status(200).json({ success: true, jobs });
+        // Salary range
+        if (salaryMin || salaryMax) {
+            query.salary = {};
+            if (salaryMin) query.salary.$gte = Number(salaryMin);
+            if (salaryMax) query.salary.$lte = Number(salaryMax);
+        }
+
+        // Job type filter (e.g., Full Time, Part Time)
+        if (jobType) {
+            const jobTypes = jobType.split(',');
+            query.jobType = { $in: jobTypes };
+        }
+
+        // Job level filter (e.g., Entry, Medium, Expert)
+        if (level) {
+            const levels = level.split(',');
+            query.level = { $in: levels };
+        }
+
+        // Fetch jobs and populate client info
+        const jobs = await JobModel.find(query)
+            .sort({ createdAt: -1 })
+            .populate({
+                path: 'createdBy',
+                select: 'name profilePicture'
+            });
+
+        const DEFAULT_IMAGE = 'https://res.cloudinary.com/dxmeatsae/image/upload/v1744198536/uploads/tep04pn8luh3bt2n24g6.png';
+
+        // Add fallback profile picture
+        const jobsWithClient = jobs.map(job => {
+            const jobObj = job.toObject();
+            const client = jobObj.createdBy || {};
+            return {
+                ...jobObj,
+                clientName: client.name || 'Unknown Client',
+                clientProfilePicture: client.profilePicture || DEFAULT_IMAGE
+            };
+        });
+
+        res.status(200).json({ success: true, jobs: jobsWithClient });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 

@@ -11,6 +11,8 @@ import jobRoutes from "./routes/jobRoutes.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import forgotPasswordRoutes from "./routes/forgotPassword.js";
+import userRoutes from "./routes/userRoutes.js";
 import { initializeSocket } from "./controllers/socket.js"; //  Correct socket import
 
 dotenv.config();
@@ -38,6 +40,8 @@ initializeSocket(server); //
 
 //  API Routes
 app.use("/api", AuthRoutes);
+app.use('/api/user', userRoutes);
+app.use("/api/forgot-password", forgotPasswordRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", Upload);
 app.use("/api", clientRoutes);

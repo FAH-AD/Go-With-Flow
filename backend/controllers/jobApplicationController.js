@@ -6,11 +6,13 @@ import JobApplication from '../models/jobApplication.js';
  */
 const applyForJob = async (req, res) => {
     try {
+
+        console.log("req.user", req.user);
         // Ensure user is logged in as a freelancer
         if (!req.user || req.user.role !== 'freelancer') {
             return res.status(403).json({ success: false, message: "Only freelancers can apply for jobs." });
         }
-
+     
         const { jobId, coverLetter, price } = req.body;
         const freelancerId = req.user._id; // Logged-in freelancer ID
 

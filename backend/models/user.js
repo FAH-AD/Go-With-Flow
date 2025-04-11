@@ -30,7 +30,8 @@ const CertificateSchema = new mongoose.Schema({
     title: { type: String, required: true },
     institute: { type: String, required: true },
     startDate: { type: Date, required: true },
-    endDate: { type: Date }
+    endDate: { type: Date },
+    certificate_img: { type: String }, // URL or file path
 });
 
 const UserSchema = new mongoose.Schema({
@@ -49,8 +50,9 @@ const UserSchema = new mongoose.Schema({
     portfolio: [PortfolioSchema],
     description: { type: String },
     title: { type: String },
+    
     education: [EducationSchema],
-    rate: { type: Number }, // Hourly or project-based rate
+    rate: { type: Number }, 
     languages: [LanguageSchema],
     certificates: [CertificateSchema]
 });

@@ -3,28 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { post } from '../services/ApiEndpoint';
 import { toast } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
+import FreelancerRegistrationForm from '../components/RegistrationForm';
 
 export default function Register() {
+  const [role, setRole] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [document, setDocument] = useState('');
+  const [numEmployees, setNumEmployees] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleClientSubmit = async (e) => {
     e.preventDefault();
-
-    if (!name || !email || !password || !role || (role === 'client' && !companyName)) {
+    if (!name || !email || !companyName || !numEmployees) {
       toast.error('Please fill in all fields');
       return;
     }
 
     try {
-      const payload = { name, email, password, role };
-      if (role === 'client') payload.companyName = companyName;
-
+      const payload = { name, email, role: 'client', companyName, numEmployees };
       const response = await post('/api/register', payload);
 
       if (response.status === 201 || response.status === 200) {
@@ -60,8 +57,14 @@ export default function Register() {
           </div>
         )}
 
-        {role && (
-          <form className="bg-white max-w-6xl w-full m-auto rounded-xl shadow-md p-8" onSubmit={handleSubmit}>
+        {role === 'freelancer' && (
+          <div className="max-w-6xl w-full m-auto">
+            <FreelancerRegistrationForm />
+          </div>
+        )}
+
+        {role === 'client' && (
+          <form className="bg-white max-w-6xl w-full m-auto rounded-xl shadow-md p-8" onSubmit={handleClientSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 mb-2">Name</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border rounded-md px-4 py-2" />
@@ -71,16 +74,18 @@ export default function Register() {
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border rounded-md px-4 py-2" />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded-md px-4 py-2" />
+              <label className="block text-gray-700 mb-2">Company Name</label>
+              <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full border rounded-md px-4 py-2" />
             </div>
-
-            {role === 'client' && (
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Company Name</label>
-                <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full border rounded-md px-4 py-2" />
-              </div>
-            )}
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Number of Employees</label>
+              <select value={numEmployees} onChange={(e) => setNumEmployees(e.target.value)} className="w-full border rounded-md px-4 py-2">
+                <option value="">Select</option>
+                <option value="1-20">1-20</option>
+                <option value="50-100">50-100</option>
+                <option value=">100">Above 100</option>
+              </select>
+            </div>
 
             <button type="submit" className="bg-[#6300B3] hover:bg-purple-700 text-white font-bold w-full py-2 rounded-md">Register</button>
           </form>

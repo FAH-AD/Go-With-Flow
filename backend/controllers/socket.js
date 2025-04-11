@@ -18,7 +18,7 @@ const initializeSocket = (server) => {
     });
 
     io.on("connection", (socket) => {
-        console.log("User Connected:", socket.id);
+        // console.log("User Connected:", socket.id);
 
         socket.on("joinRoom", ({ jobId }) => {
             if (!jobId) return;
@@ -66,7 +66,7 @@ const initializeSocket = (server) => {
         });
 
         socket.on("disconnect", () => {
-            console.log("User Disconnected:", socket.id);
+            // console.log("User Disconnected:", socket.id);
         });
     });
 

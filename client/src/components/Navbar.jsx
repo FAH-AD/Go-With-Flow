@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import logo from '../assets/logo.png'
+import { useDispatch } from 'react-redux';
+import { SetUser } from '../redux/AuthSlice';
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -8,10 +10,12 @@ import { useNavigate } from "react-router-dom";
 function Navbar({ showFullNav,isLogged,role }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate =useNavigate()
+  const dispatch = useDispatch();
   const handleLogout = async () => {
     try {
       await axios.post('/api/logout', {}, { withCredentials: true });
       localStorage.removeItem('authToken'); // Clear local storage if token is stored
+      dispatch(SetUser(null));
       toast.success('Logged out successfully');
       navigate('/login'); // Redirect to login page
     } catch (error) {
@@ -53,7 +57,7 @@ function Navbar({ showFullNav,isLogged,role }) {
   ) : role === "freelancer" ? (
     <>
       <li>
-        <a href="#" className="hover:text-purple-400">
+        <a href="/search-job" className="hover:text-purple-400">
           Search Job
         </a>
       </li>
